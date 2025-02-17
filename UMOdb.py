@@ -207,6 +207,38 @@ def connect_to_base():
         messagebox.showinfo("Подключение к базе", f"Подключаюсь к базе ({param}ЗАПУСТИТЕ ЛАЙТ)")
     else:
         messagebox.showwarning("Ошибка", "Выберите базу из списка")
+def emule_KKM():
+
+    # -DtestEnv = true
+    selected_base = listbox.get(tk.ACTIVE)
+    if selected_base:
+        param = bases[selected_base]
+        print(f"Прописываем {param}")
+        print(param + "Вход")
+        home_dir = os.path.expanduser('~')
+        file_path = fr"{home_dir}\shop-lite_{param}\shop-lite.cmd"
+
+        # Читаем содержимое файла
+        with open(file_path, 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+
+        # Обновляем нужную строку
+        for i in range(len(lines)):
+            if lines[i].startswith("    -cp lib\*; -Xmx768m custis.shop.ui.Application"):
+                lines[i] = f"-DtestEnv=true    -cp lib\*; -Xmx768m custis.shop.ui.Application"
+                break  # Прерываем цикл, так как строка найдена и изменена
+
+        # Записываем изменения обратно в файл
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.writelines(lines)
+
+        # update_version("5.32")
+
+        messagebox.showinfo("Успех",f"Эмуляция ККМ включена, ({param}ЗАПУСТИТЕ ЛАЙТ)")
+    else:
+        messagebox.showwarning("Ошибка", "Выберите базу из списка")
+
+
 
 # Вывод текущей директории
 print("Текущая директория:", os.getcwd())
@@ -217,7 +249,7 @@ bases = read_bases_from_file('base.conf')
 # Создание основного окна
 root = tk.Tk()
 root.title("Базы")
-root.geometry("230x300")
+root.geometry("230x320")
 # Создание списка баз
 listbox = tk.Listbox(root)
 for base in bases:
@@ -228,8 +260,16 @@ listbox.pack(pady=10)
 btn_create = tk.Button(root, text="Создать новую базу", command=create_base)
 btn_create.pack(pady=10)
 
+btn_connect = tk.Button(root, text="Включить эмуляцию ККМ", command=emule_KKM)
+btn_connect.pack(pady=10)
+
 btn_connect = tk.Button(root, text="Удалить базу", command=kill_to_base)
 btn_connect.pack(pady=10)
 
 # Запуск основного цикла
 root.mainloop()
+
+# чтобы обновить лайт надо чтобы в файле  package.manifest в папке лайта была строчка  <Version>5.23</Version>
+# а обновление запуститься через launcher.exe , но после него надо в shop-lite.cmd добавлять  f"-DtestEnv=true    -cp lib\*; -Xmx768m custis.shop.ui.Application"
+
+#test pusha
