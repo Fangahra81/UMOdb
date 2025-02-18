@@ -5,6 +5,40 @@ import shutil
 import win32com.client
 import re
 from datetime import datetime
+import subprocess
+
+# def start_lite():
+#     selected_base = listbox.get(tk.ACTIVE)
+#     if selected_base:
+#         param = bases[selected_base]
+#         print(f"Прописываем {param}")
+#         print(param + "Вход")
+#         home_dir = os.path.expanduser('~')
+#         file_path = fr"{home_dir}\shop-lite_{param}\\"
+#
+#     # Замените 'your_command' на команду, которую вы хотите выполнить
+#     cmd_file = f'{file_path}\launcher.exe'
+#
+#     # Запуск файла program.cmd
+#     process = subprocess.Popen(cmd_file, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#
+#     # Ожидание завершения процесса и получение вывода
+#     stdout, stderr = process.communicate()
+#
+#     # Указываем правильную кодировку для декодирования (например, cp866 для Windows)
+#     try:
+#         print("STDOUT:", stdout.decode('cp866'))  # Используем cp866 для декодирования
+#     except UnicodeDecodeError:
+#         print("STDOUT: (не удалось декодировать вывод)")
+#
+#     try:
+#         print("STDERR:", stderr.decode('cp866'))  # Используем cp866 для декодирования
+#     except UnicodeDecodeError:
+#         print("STDERR: (не удалось декодировать ошибки)")
+#
+#     # Получение кода возврата
+#     return_code = process.returncode
+#     print("Return Code:", return_code)
 
 #Создаем ярлык
 def create_shortcut(target_path, shortcut_name, icon_path=None, icon_index=0):
@@ -53,9 +87,6 @@ def copysource(direct):
         icon_path=fr"{home_dir}\\shop-lite_{direct}\\icon.ico",
         icon_index=0
     )
-
-
-
 #функция правки файла
 def update_db_url():
 
@@ -78,7 +109,7 @@ def update_db_url():
                 break  # Прерываем цикл, так как строка найдена и изменена
 
         # Записываем изменения обратно в файл
-        with open(file_path, 'w', encoding='utf-8') as file:
+        with open(file_path, 'w', encoding='cp1251') as file:
             file.writelines(lines)
 
         # update_version("5.32")
@@ -86,63 +117,42 @@ def update_db_url():
         messagebox.showinfo("Подключение к базе", f"Подключаюсь к базе ({param}ЗАПУСТИТЕ ЛАЙТ)")
     else:
         messagebox.showwarning("Ошибка", "Выберите базу из списка")
-
 #Функция получения СМС
+
 def get_SMS():
-
-    # найти нужный лог с датой создания текущей
-    # найти с конца документа СМС
-
     selected_base = listbox.get(tk.ACTIVE)
     if selected_base:
         param = bases[selected_base]
         print(f"Прописываем {param}")
         print(param + "Вход")
         home_dir = os.path.expanduser('~')
-        # Получаем текущую дату в формате YYYY-MM-DD
         current_date = datetime.now().strftime('%Y-%m-%d')
 
-
         search_directory = fr"{home_dir}\\shop-lite_{param}\\logs\\"
-        # Формируем имя файла
         log_filename = f'axis.{current_date}.log'
-        # Формируем полный путь к файлу
         full_path = os.path.join(search_directory, log_filename)
 
-        # Проверяем, существует ли файл
         if not os.path.exists(full_path):
             print(f"Файл {full_path} не найден.")
         else:
-            # Открываем файл и читаем его с конца
-            with open(full_path, 'r',  encoding='utf-8') as file:
-                # Читаем файл с конца
-                for line in reversed(file.readlines()):
-                    # Ищем строку с шаблоном pkCards/"><Code>№№№</Code>
-                    match = re.search(r'pkCards/"><Code>(\d+)</Code>', line)
-                    if match:
-                        # Если нашли, выводим цифры
-                        print(f"Найдены цифры: {match.group(1)}")
-                        break
-                else:
-                    print("Строка с шаблоном не найдена.")
+            try:
+                with open(full_path, 'r', encoding='windows-1251', errors='replace') as file:
+                    for line in reversed(file.readlines()):
+                        match = re.search(r'pkCards/"><Code>(\d+)</Code>', line)
+                        if match:
+                            print(f"Найдены цифры: {match.group(1)}")
+                            break
+                    else:
+                        print("Строка с шаблоном не найдена.")
 
-        messagebox.showinfo("Успех", f"SMS, {match.group(1)}")
+                if match:
+                    messagebox.showinfo("Успех", f"SMS, {match.group(1)}")
+                else:
+                    messagebox.showwarning("Ошибка", "SMS не найдена")
+            except Exception as e:
+                print(f"Ошибка при чтении файла: {e}")
     else:
         messagebox.showwarning("Ошибка", "Выберите базу из списка")
-
-    # Указываем папку, в которой нужно искать файл
-    search_directory = "/path/to/your/logs"  # Замените на нужный путь
-
-
-
-
-
-
-
-
-
-
-
 
 # def update_version(new_value):
 #     file_path = r"C:\shop-lite\package.manifest"
@@ -175,10 +185,8 @@ def read_bases_from_file(filename):
             name, param = line.strip().split(':')
             bases[name] = param
     return bases
-
 # Функция для создания новой базы
 #стартовая
-
 def create_base():
     selected_base = listbox.get(tk.ACTIVE)
     if selected_base:
@@ -310,6 +318,10 @@ for base in bases:
 listbox.pack(pady=10)
 
 # Создание кнопок
+# btn_connect = tk.Button(root, text="Запустить Лайт", command=start_lite)
+# btn_connect.pack(pady=10)
+
+
 btn_create = tk.Button(root, text="Создать новую базу", command=create_base)
 btn_create.pack(pady=10)
 
