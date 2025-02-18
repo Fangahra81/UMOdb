@@ -3,7 +3,8 @@ from tkinter import messagebox
 import os
 import shutil
 import win32com.client
-
+import re
+from datetime import datetime
 
 #Создаем ярлык
 def create_shortcut(target_path, shortcut_name, icon_path=None, icon_index=0):
@@ -85,6 +86,58 @@ def update_db_url():
         messagebox.showinfo("Подключение к базе", f"Подключаюсь к базе ({param}ЗАПУСТИТЕ ЛАЙТ)")
     else:
         messagebox.showwarning("Ошибка", "Выберите базу из списка")
+
+#Функция получения СМС
+def get_SMS():
+
+    # найти нужный лог с датой создания текущей
+    # найти с конца документа СМС
+
+    selected_base = listbox.get(tk.ACTIVE)
+    if selected_base:
+        param = bases[selected_base]
+        print(f"Прописываем {param}")
+        print(param + "Вход")
+        home_dir = os.path.expanduser('~')
+        # Получаем текущую дату в формате YYYY-MM-DD
+        current_date = datetime.now().strftime('%Y-%m-%d')
+
+
+        search_directory = fr"{home_dir}\\shop-lite_{param}\\logs\\"
+        # Формируем имя файла
+        log_filename = f'axis.{current_date}.log'
+        # Формируем полный путь к файлу
+        full_path = os.path.join(search_directory, log_filename)
+
+        # Проверяем, существует ли файл
+        if not os.path.exists(full_path):
+            print(f"Файл {full_path} не найден.")
+        else:
+            # Открываем файл и читаем его с конца
+            with open(full_path, 'r',  encoding='utf-8') as file:
+                # Читаем файл с конца
+                for line in reversed(file.readlines()):
+                    # Ищем строку с шаблоном pkCards/"><Code>№№№</Code>
+                    match = re.search(r'pkCards/"><Code>(\d+)</Code>', line)
+                    if match:
+                        # Если нашли, выводим цифры
+                        print(f"Найдены цифры: {match.group(1)}")
+                        break
+                else:
+                    print("Строка с шаблоном не найдена.")
+
+        messagebox.showinfo("Успех", f"SMS, {match.group(1)}")
+    else:
+        messagebox.showwarning("Ошибка", "Выберите базу из списка")
+
+    # Указываем папку, в которой нужно искать файл
+    search_directory = "/path/to/your/logs"  # Замените на нужный путь
+
+
+
+
+
+
 
 
 
@@ -249,7 +302,7 @@ bases = read_bases_from_file('base.conf')
 # Создание основного окна
 root = tk.Tk()
 root.title("Базы")
-root.geometry("230x320")
+root.geometry("230x370")
 # Создание списка баз
 listbox = tk.Listbox(root)
 for base in bases:
@@ -258,6 +311,9 @@ listbox.pack(pady=10)
 
 # Создание кнопок
 btn_create = tk.Button(root, text="Создать новую базу", command=create_base)
+btn_create.pack(pady=10)
+
+btn_create = tk.Button(root, text="Получить СМС", command=get_SMS)
 btn_create.pack(pady=10)
 
 btn_connect = tk.Button(root, text="Включить эмуляцию ККМ", command=emule_KKM)
